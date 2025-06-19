@@ -2117,16 +2117,12 @@ int PIOc_write_darray_impl(int ncid, int varid, int ioid, PIO_Offset arraylen, c
     int mpierr = MPI_SUCCESS;  /* Return code from MPI functions. */
     int ierr = PIO_NOERR;  /* Return code. */
 
-    GPTLstart("PIO:PIOc_write_darray");
-    GPTLstart("PIO:write_total");
     LOG((1, "PIOc_write_darray ncid = %d varid = %d ioid = %d arraylen = %d",
          ncid, varid, ioid, arraylen));
 
     /* Get the file info. */
     if ((ierr = pio_get_file(ncid, &file)))
     {
-        GPTLstop("PIO:PIOc_write_darray");
-        GPTLstop("PIO:write_total");
         return pio_err(NULL, NULL, PIO_EBADID, __FILE__, __LINE__,
                         "Writing variable (varid=%d) failed on file. Invalid file id (ncid=%d) provided", varid, ncid);
     }
@@ -2141,9 +2137,11 @@ int PIOc_write_darray_impl(int ncid, int varid, int ioid, PIO_Offset arraylen, c
 
     if ((file->iotype == PIO_IOTYPE_ADIOS) || (file->iotype == PIO_IOTYPE_ADIOSC))
     {
-        GPTLstart("PIO:PIOc_write_darray_adios");
         GPTLstart("PIO:write_total_adios");
+        GPTLstart("PIO:PIOc_write_darray_adios");
     }
+    GPTLstart("PIO:write_total");
+    GPTLstart("PIO:PIOc_write_darray");
 
     LOG((1, "PIOc_write_darray ncid=%d varid=%d wb_pend=%llu file_wb_pend=%llu",
           ncid, varid,

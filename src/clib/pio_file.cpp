@@ -136,13 +136,13 @@ int PIOc_createfile_impl(int iosysid, int *ncidp, const int *iotype, const char 
     iosystem_desc_t *ios;  /* Pointer to io system information. */
     int ret;               /* Return code from function calls. */
 
-    GPTLstart("PIO:PIOc_createfile");
-    GPTLstart("PIO:write_total");
     if ((*iotype == PIO_IOTYPE_ADIOS) || (*iotype == PIO_IOTYPE_ADIOSC))
     {
-        GPTLstart("PIO:PIOc_createfile_adios");
         GPTLstart("PIO:write_total_adios");
+        GPTLstart("PIO:PIOc_createfile_adios");
     }
+    GPTLstart("PIO:write_total");
+    GPTLstart("PIO:PIOc_createfile");
 
     /* Get the IO system info from the id. */
     if (!(ios = pio_get_iosystem_from_id(iosysid)))
@@ -475,25 +475,24 @@ int PIOc_closefile_impl(int ncid)
 
     if ((file->iotype == PIO_IOTYPE_ADIOS) || (file->iotype == PIO_IOTYPE_ADIOSC))
     {
-        GPTLstart("PIO:PIOc_closefile_adios");
-
         if (file->mode & PIO_WRITE)
         {
-            GPTLstart("PIO:write_total_adios");
 #ifndef _ADIOS_BP2NC_TEST
             GPTLstart("PIO:write_total");
 #endif
+            GPTLstart("PIO:write_total_adios");
         }
+        GPTLstart("PIO:PIOc_closefile_adios");
     }
     else
     {
-        GPTLstart("PIO:PIOc_closefile");
 
         if (file->mode & PIO_WRITE)
         {
-            GPTLstart("PIO:PIOc_closefile_write_mode");
             GPTLstart("PIO:write_total");
+            GPTLstart("PIO:PIOc_closefile_write_mode");
         }
+        GPTLstart("PIO:PIOc_closefile");
     }
 
     /* Sync changes before closing on all tasks if async is not in
@@ -1093,6 +1092,7 @@ int PIOc_closefile_impl(int ncid)
     }
 #endif
 
+    GPTLstop("PIO:PIOc_closefile");
     if (file->mode & PIO_WRITE)
     {
         GPTLstop("PIO:PIOc_closefile_write_mode");
@@ -1108,7 +1108,6 @@ int PIOc_closefile_impl(int ncid)
     /* Delete file from our list of open files. */
     pio_delete_file_from_list(ncid);
 
-    GPTLstop("PIO:PIOc_closefile");
     return ierr;
 }
 
