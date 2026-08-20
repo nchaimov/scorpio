@@ -306,8 +306,8 @@ int PIOc_setframe_impl(int ncid, int varid, int frame)
                 {
                     spio_ltimer_start(ios->io_fstats->wr_timer_name);
                     spio_ltimer_start(file->io_fstats->wr_timer_name);
-                    GPTLstart("PIO:write_total");
                     GPTLstart("PIO:write_total_adios");
+                    GPTLstart("PIO:write_total");
                 }
                 spio_ltimer_start(ios->io_fstats->tot_timer_name);
                 spio_ltimer_start(file->io_fstats->tot_timer_name);
@@ -1432,7 +1432,6 @@ int PIOc_Init_Intracomm_impl(MPI_Comm comp_comm, int num_iotasks, int stride, in
 #ifdef _SPIO_HAS_H5Z_ZFP
     ret = H5Z_zfp_initialize();
     if(ret < 0){
-      GPTLstop("PIO:PIOc_Init_Intracomm");
       return pio_err(ios, NULL, ret, __FILE__, __LINE__, "Initializing HDF5 ZFP filter (for lossy data compression) failed");
     }
 #else
@@ -1446,7 +1445,6 @@ int PIOc_Init_Intracomm_impl(MPI_Comm comp_comm, int num_iotasks, int stride, in
     /* Lossless compression : Default Blosc2 + ZSTD */
     ret = register_blosc2(NULL, NULL);
     if(ret < 0){
-      GPTLstop("PIO:PIOc_Init_Intracomm");
       return pio_err(ios, NULL, ret, __FILE__, __LINE__, "Registering/Initializing HDF5 Blosc2 filter (for lossless data compression) failed");
     }
 #else

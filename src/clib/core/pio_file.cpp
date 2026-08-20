@@ -140,11 +140,11 @@ int PIOc_createfile_impl(int iosysid, int *ncidp, const int *iotype, const char 
     iosystem_desc_t *ios;  /* Pointer to io system information. */
     int ret;               /* Return code from function calls. */
 
-    GPTLstart("PIO:write_total");
     if ((*iotype == PIO_IOTYPE_ADIOS) || (*iotype == PIO_IOTYPE_ADIOSC))
     {
         GPTLstart("PIO:write_total_adios");
     }
+    GPTLstart("PIO:write_total");
 
     /* Get the IO system info from the id. */
     if (!(ios = pio_get_iosystem_from_id(iosysid)))
@@ -895,16 +895,16 @@ int PIOc_closefile_impl(int ncid)
 
     if((file->iotype == PIO_IOTYPE_ADIOS) || (file->iotype == PIO_IOTYPE_ADIOSC)){
       if(file->mode & PIO_WRITE){
-        GPTLstart("PIO:write_total_adios");
 #ifndef _ADIOS_BP2NC_TEST
         GPTLstart("PIO:write_total");
 #endif
+        GPTLstart("PIO:write_total_adios");
       }
     }
     else{
       if(file->mode & PIO_WRITE){
-        GPTLstart("PIO:PIOc_closefile_write_mode");
         GPTLstart("PIO:write_total");
+        GPTLstart("PIO:PIOc_closefile_write_mode");
       }
     }
 
@@ -993,6 +993,29 @@ int PIOc_closefile_impl(int ncid)
       /* Wait on all hdf5 async ops before a "hard close" */
       ierr = spio_wait_all_hdf5_async_ops(ios->iosysid);
       if(ierr != PIO_NOERR){
+        if((file->iotype == PIO_IOTYPE_ADIOS) || (file->iotype == PIO_IOTYPE_ADIOSC)){
+          if(file->mode & PIO_WRITE){ GPTLstop("PIO:write_total_adios"); }
+
+#ifndef _ADIOS_BP2NC_TEST
+          if(file->mode & PIO_WRITE){
+            GPTLstop("PIO:write_total");
+            spio_ltimer_stop(ios->io_fstats->wr_timer_name);
+            spio_ltimer_stop(file->io_fstats->wr_timer_name);
+          }
+          spio_ltimer_stop(ios->io_fstats->tot_timer_name);
+          spio_ltimer_stop(file->io_fstats->tot_timer_name);
+#endif
+        }
+        else{
+          if(file->mode & PIO_WRITE){
+            GPTLstop("PIO:PIOc_closefile_write_mode");
+            GPTLstop("PIO:write_total");
+            spio_ltimer_stop(ios->io_fstats->wr_timer_name);
+            spio_ltimer_stop(file->io_fstats->wr_timer_name);
+          }
+          spio_ltimer_stop(ios->io_fstats->tot_timer_name);
+          spio_ltimer_stop(file->io_fstats->tot_timer_name);
+        }
         return pio_err(ios, file, ierr, __FILE__, __LINE__,
                         "Closing file (%s, ncid=%d) failed. Error sending async msg PIO_MSG_CLOSE_FILE", pio_get_fname_from_file(file), ncid);
       }
@@ -1182,9 +1205,9 @@ int PIOc_sync_impl(int ncid)
 
     if (file->mode & PIO_WRITE)
     {
-        GPTLstart("PIO:write_total");
         if ((file->iotype == PIO_IOTYPE_ADIOS) || (file->iotype == PIO_IOTYPE_ADIOSC))
             GPTLstart("PIO:write_total_adios");
+        GPTLstart("PIO:write_total");
     }
 
     ierr = sync_file(ncid);

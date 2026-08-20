@@ -41,11 +41,9 @@ int spio_put_att_tc(int ncid, int varid, const char *name, nc_type atttype,
     int mpierr = MPI_SUCCESS;  /* Return code from MPI function codes. */
     int ierr = PIO_NOERR;           /* Return code from function calls. */
 
-    GPTLstart("PIO:write_total");
     /* Find the info about this file. */
     if ((ierr = pio_get_file(ncid, &file)))
     {
-        GPTLstop("PIO:write_total");
         return pio_err(NULL, NULL, ierr, __FILE__, __LINE__,
                         "Writing variable (varid=%d) attribute (%s) to file failed. Invalid file id (ncid=%d) provided", varid, (name) ? name : "NULL", ncid);
     }
@@ -79,8 +77,6 @@ int spio_put_att_tc(int ncid, int varid, const char *name, nc_type atttype,
         /* ADIOS type does not support open to append mode */
         if (file->is_reopened)
         {
-            GPTLstop("PIO:spio_put_att_tc");
-            GPTLstop("PIO:write_total");
             spio_ltimer_stop(ios->io_fstats->wr_timer_name);
             spio_ltimer_stop(ios->io_fstats->tot_timer_name);
             spio_ltimer_stop(file->io_fstats->wr_timer_name);
@@ -98,6 +94,7 @@ int spio_put_att_tc(int ncid, int varid, const char *name, nc_type atttype,
     {
         GPTLstart("PIO:write_total_adios");
     }
+    GPTLstart("PIO:write_total");
 
     /* User must provide some valid parameters. */
     if (!name || !op || strlen(name) > PIO_MAX_NAME || len < 0)
@@ -2384,7 +2381,6 @@ int spio_put_vars_tc(int ncid, int varid, const PIO_Offset *start, const PIO_Off
     int mpierr = MPI_SUCCESS;  /* Return code from MPI function codes. */
     int ierr = PIO_NOERR;          /* Return code from function calls. */
 
-    GPTLstart("PIO:write_total");
     LOG((1, "spio_put_vars_tc ncid = %d varid = %d start_present = %d "
          "count_present = %d stride_present = %d xtype = %d", ncid, varid,
          start_present, count_present, stride_present, xtype));
@@ -2392,7 +2388,6 @@ int spio_put_vars_tc(int ncid, int varid, const PIO_Offset *start, const PIO_Off
     /* Get file info. */
     if ((ierr = pio_get_file(ncid, &file)))
     {
-        GPTLstop("PIO:write_total");
         return pio_err(NULL, NULL, ierr, __FILE__, __LINE__,
                         "Writing variable (varid=%d) to file failed. Invalid file id (ncid=%d) provided", varid, ncid);
     }
@@ -2411,8 +2406,6 @@ int spio_put_vars_tc(int ncid, int varid, const PIO_Offset *start, const PIO_Off
         /* ADIOS type does not support open to append mode */
         if (file->is_reopened)
         {
-            GPTLstop("PIO:spio_put_vars_tc");
-            GPTLstop("PIO:write_total");
             spio_ltimer_stop(ios->io_fstats->wr_timer_name);
             spio_ltimer_stop(ios->io_fstats->tot_timer_name);
             spio_ltimer_stop(file->io_fstats->wr_timer_name);
@@ -2430,6 +2423,7 @@ int spio_put_vars_tc(int ncid, int varid, const PIO_Offset *start, const PIO_Off
     {
         GPTLstart("PIO:write_total_adios");
     }
+    GPTLstart("PIO:write_total");
 
     /* User must provide a place to put some data. */
     if (!buf)

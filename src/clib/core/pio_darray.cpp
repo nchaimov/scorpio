@@ -1996,9 +1996,6 @@ int PIOc_write_darray_impl(int ncid, int varid, int ioid, PIO_Offset arraylen, c
   if((file->iotype == PIO_IOTYPE_ADIOS) || (file->iotype == PIO_IOTYPE_ADIOSC)){
     /* ADIOS type does not support open to append mode */
     if(file->is_reopened){
-      GPTLstop("PIO:PIOc_write_darray");
-      GPTLstop("PIO:write_total");
-      GPTLstop("PIO:PIOc_write_darray_adios");
       GPTLstop("PIO:write_total_adios");
       return pio_err(ios, file, PIO_EADIOS2ERR, __FILE__, __LINE__,
                      "Writing variable (%s, varid=%d) to file (%s, ncid=%d) using ADIOS iotype failed. "
@@ -2012,7 +2009,6 @@ int PIOc_write_darray_impl(int ncid, int varid, int ioid, PIO_Offset arraylen, c
   /* Get decomposition information. */
   if(!(iodesc = pio_get_iodesc_from_id(ioid))){
     if((file->iotype == PIO_IOTYPE_ADIOS) || (file->iotype == PIO_IOTYPE_ADIOSC)){
-      GPTLstop("PIO:PIOc_write_darray_adios");
       GPTLstop("PIO:write_total_adios");
     }
     return pio_err(ios, file, PIO_EBADID, __FILE__, __LINE__,
@@ -2025,7 +2021,6 @@ int PIOc_write_darray_impl(int ncid, int varid, int ioid, PIO_Offset arraylen, c
    * if it is too big (the excess values will be ignored.) */
   if(arraylen < iodesc->ndof){
     if((file->iotype == PIO_IOTYPE_ADIOS) || (file->iotype == PIO_IOTYPE_ADIOSC)){
-      GPTLstop("PIO:PIOc_write_darray_adios");
       GPTLstop("PIO:write_total_adios");
     }
     return pio_err(ios, file, PIO_EINVAL, __FILE__, __LINE__,
@@ -2077,6 +2072,9 @@ int PIOc_write_darray_impl(int ncid, int varid, int ioid, PIO_Offset arraylen, c
     /* Find out PIO data type of var. */
     if(vdesc->pio_type == PIO_NAT){
       if((ierr = PIOc_inq_vartype_impl(ncid, varid, &vdesc->pio_type))){
+        if((file->iotype == PIO_IOTYPE_ADIOS) || (file->iotype == PIO_IOTYPE_ADIOSC)){
+          GPTLstop("PIO:write_total_adios");
+        }
         return pio_err(ios, NULL, ierr, __FILE__, __LINE__,
                         "Writing variable (%s, varid=%d) to file (%s, ncid=%d) failed. Inquiring variable data type failed", pio_get_vname_from_file(file, varid), varid, pio_get_fname_from_file(file), file->pio_ncid);
       }
@@ -2087,6 +2085,9 @@ int PIOc_write_darray_impl(int ncid, int varid, int ioid, PIO_Offset arraylen, c
     /* Find out length of type. */
     if(vdesc->type_size == 0){
       if((ierr = PIOc_inq_type_impl(ncid, vdesc->pio_type, NULL, &vdesc->type_size))){
+        if((file->iotype == PIO_IOTYPE_ADIOS) || (file->iotype == PIO_IOTYPE_ADIOSC)){
+          GPTLstop("PIO:write_total_adios");
+        }
         return pio_err(ios, NULL, ierr, __FILE__, __LINE__,
                         "Writing variable (%s, varid=%d) to file (%s, ncid=%d) failed. Inquiring variable data type length failed", pio_get_vname_from_file(file, varid), varid, pio_get_fname_from_file(file), file->pio_ncid);
       }
@@ -2243,7 +2244,6 @@ int PIOc_write_darray_impl(int ncid, int varid, int ioid, PIO_Offset arraylen, c
     spio_ltimer_stop(file->io_fstats->wr_timer_name);
     spio_ltimer_stop(file->io_fstats->tot_timer_name);
     if((ierr = flush_buffer(ncid, wmb, (needsflush == 2)))){
-      GPTLstop("PIO:write_total");
       return pio_err(ios, file, ierr, __FILE__, __LINE__,
                       "Writing variable (%s, varid=%d) to file (%s, ncid=%d) failed. Flushing data (multiple cached variables with the same decomposition) from compute processes to I/O processes %s failed", pio_get_vname_from_file(file, varid), varid, pio_get_fname_from_file(file), file->pio_ncid, (needsflush == 2) ? "and to disk" : "");
     }
